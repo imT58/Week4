@@ -43,8 +43,8 @@ typedef struct{
   int16_t vr1;          //旋钮1
   int16_t vr2;          //2
 
-  int16_t er_protect;   //故障保护激活位
   int16_t b_lose;       //帧丢失标志位
+  int16_t er_protect;   //故障保护激活位
 }rc_data;
 /* USER CODE END PTD */
 
@@ -54,8 +54,8 @@ static rc_data ch_data; //通道值。static让变量只能在当前文件调用
 uint8_t raw_data[256];  //原始数据
 int16_t ch[16];         //解析值减去1024
 uint8_t start_byte;
-uint8_t flat_byte;
-uint8_t stop_byte;
+uint8_t flat_byte;      //标志位
+uint8_t stop_byte;      //停止位
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
   if(huart==&huart3){
@@ -71,17 +71,26 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
     ch[7]=( ( (int16_t)raw_data[9]>>5 | (int16_t)raw_data[10]<<3 ) & 0x07FF ) -1024;
     ch[8]=( ( (int16_t)raw_data[10]>>8 | (int16_t)raw_data[11]<<0 | (int16_t)raw_data[12]<<8 ) & 0x07FF ) -1024;
     ch[9]=( ( (int16_t)raw_data[12]>>3 | (int16_t)raw_data[13]<<5 ) & 0x07FF ) -1024;
-
-
-
     flat_byte=raw_data[23];
     stop_byte=raw_data[24];
 
 
+    ch_data.rocker_l=ch[0];
+    ch_data.rocker_l1=ch[1];
+    ch_data.rocker_r=ch[2];
+    ch_data.rocker_r1=ch[3];
 
+    ch_data.sw1=ch[4];
+    ch_data.sw2=ch[5];
+    ch_data.sw3=ch[6];
+    ch_data.sw4=ch[7];
 
+    ch_data.vr1=ch[8];
+    ch_data.vr2=ch[9];
 
-
+    ch_data.b_lose=(flat_byte>>2)&0x01;
+    ch_data.er_protect=(flat_byte>>3)&0x01;
+    
 
     HAL_UARTEx_ReceiveToIdle_DMA(&huart3,raw_data,25);
     __HAL_DMA_DISABLE_IT(huart3.hdmarx,DMA_IT_HT);
@@ -90,9 +99,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
   if(huart==&huart3){
-    
-
-
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart3,raw_data,25);
+    __HAL_DMA_DISABLE_IT(huart3.hdmarx,DMA_IT_HT);
   }
 }
 /* USER CODE END PD */
@@ -151,7 +159,8 @@ int main(void)
   MX_DMA_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart3,raw_data,25);
+    __HAL_DMA_DISABLE_IT(huart3.hdmarx,DMA_IT_HT);
   /* USER CODE END 2 */
 
   /* Infinite loop */
