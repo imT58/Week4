@@ -56,49 +56,18 @@ int16_t ch[16];         //解析值减去1024
 uint8_t start_byte;
 uint8_t flat_byte;      //标志位
 uint8_t stop_byte;      //停止位
+volatile uint8_t state=0;
+volatile uint8_t error_time=0;
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
   if(huart==&huart3){
-    start_byte=raw_data[0];
-
-    ch[0]=( ( (int16_t)raw_data[0]>>0 | (int16_t)raw_data[1]<<8 ) & 0x07FF ) -1024;
-    ch[1]=( ( (int16_t)raw_data[1]>>3 | (int16_t)raw_data[2]<<5 ) & 0x07FF ) -1024;
-    ch[2]=( ( (int16_t)raw_data[2]>>6 | (int16_t)raw_data[3]<<2 | (int16_t)raw_data[4]<<10 ) & 0x07FF ) -1024;
-    ch[3]=( ( (int16_t)raw_data[4]>>1 | (int16_t)raw_data[5]<<7 ) & 0x07FF ) -1024;
-    ch[4]=( ( (int16_t)raw_data[5]>>4 | (int16_t)raw_data[6]<<4 ) & 0x07FF ) -1024;
-    ch[5]=( ( (int16_t)raw_data[6]>>7 | (int16_t)raw_data[7]<<1 | (int16_t)raw_data[8]<<9 ) & 0x07FF ) -1024;
-    ch[6]=( ( (int16_t)raw_data[8]>>2 | (int16_t)raw_data[9]<<6 ) & 0x07FF ) -1024;
-    ch[7]=( ( (int16_t)raw_data[9]>>5 | (int16_t)raw_data[10]<<3 ) & 0x07FF ) -1024;
-    ch[8]=( ( (int16_t)raw_data[10]>>8 | (int16_t)raw_data[11]<<0 | (int16_t)raw_data[12]<<8 ) & 0x07FF ) -1024;
-    ch[9]=( ( (int16_t)raw_data[12]>>3 | (int16_t)raw_data[13]<<5 ) & 0x07FF ) -1024;
-    flat_byte=raw_data[23];
-    stop_byte=raw_data[24];
-
-
-    ch_data.rocker_l=ch[0];
-    ch_data.rocker_l1=ch[1];
-    ch_data.rocker_r=ch[2];
-    ch_data.rocker_r1=ch[3];
-
-    ch_data.sw1=ch[4];
-    ch_data.sw2=ch[5];
-    ch_data.sw3=ch[6];
-    ch_data.sw4=ch[7];
-
-    ch_data.vr1=ch[8];
-    ch_data.vr2=ch[9];
-
-    ch_data.b_lose=(flat_byte>>2)&0x01;
-    ch_data.er_protect=(flat_byte>>3)&0x01;
-    
-
-    HAL_UARTEx_ReceiveToIdle_DMA(&huart3,raw_data,25);
-    __HAL_DMA_DISABLE_IT(huart3.hdmarx,DMA_IT_HT);
+    state=1;
   }
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
   if(huart==&huart3){
+    error_time+=1;
     HAL_UARTEx_ReceiveToIdle_DMA(&huart3,raw_data,25);
     __HAL_DMA_DISABLE_IT(huart3.hdmarx,DMA_IT_HT);
   }
@@ -167,6 +136,45 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    if(state==1){
+      state=0;
+    
+      start_byte=raw_data[0];
+
+      ch[0]=( ( (int16_t)raw_data[0]>>0 | (int16_t)raw_data[1]<<8 ) & 0x07FF ) -1024;
+      ch[1]=( ( (int16_t)raw_data[1]>>3 | (int16_t)raw_data[2]<<5 ) & 0x07FF ) -1024;
+      ch[2]=( ( (int16_t)raw_data[2]>>6 | (int16_t)raw_data[3]<<2 | (int16_t)raw_data[4]<<10 ) & 0x07FF ) -1024;
+      ch[3]=( ( (int16_t)raw_data[4]>>1 | (int16_t)raw_data[5]<<7 ) & 0x07FF ) -1024;
+      ch[4]=( ( (int16_t)raw_data[5]>>4 | (int16_t)raw_data[6]<<4 ) & 0x07FF ) -1024;
+      ch[5]=( ( (int16_t)raw_data[6]>>7 | (int16_t)raw_data[7]<<1 | (int16_t)raw_data[8]<<9 ) & 0x07FF ) -1024;
+      ch[6]=( ( (int16_t)raw_data[8]>>2 | (int16_t)raw_data[9]<<6 ) & 0x07FF ) -1024;
+      ch[7]=( ( (int16_t)raw_data[9]>>5 | (int16_t)raw_data[10]<<3 ) & 0x07FF ) -1024;
+      ch[8]=( ( (int16_t)raw_data[10]>>8 | (int16_t)raw_data[11]<<0 | (int16_t)raw_data[12]<<8 ) & 0x07FF ) -1024;
+      ch[9]=( ( (int16_t)raw_data[12]>>3 | (int16_t)raw_data[13]<<5 ) & 0x07FF ) -1024;
+      flat_byte=raw_data[23];
+      stop_byte=raw_data[24];
+
+
+    ch_data.rocker_l=ch[3];
+    ch_data.rocker_l1=ch[2];
+    ch_data.rocker_r=ch[1];
+    ch_data.rocker_r1=ch[0];
+
+    ch_data.sw1=ch[6];
+    ch_data.sw2=ch[7];
+    ch_data.sw3=ch[8];
+    ch_data.sw4=ch[9];
+
+    ch_data.vr1=ch[4];
+    ch_data.vr2=ch[5];
+
+      ch_data.b_lose=(flat_byte>>2)&0x01;
+      ch_data.er_protect=(flat_byte>>3)&0x01;
+      
+      
+      HAL_UARTEx_ReceiveToIdle_DMA(&huart3,raw_data,25);
+      __HAL_DMA_DISABLE_IT(huart3.hdmarx,DMA_IT_HT);
+  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

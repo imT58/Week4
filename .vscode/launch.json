@@ -35,11 +35,11 @@
             "type": "cortex-debug",
 
             // 当前目标芯片：STM32F103C8。
-            "device": "STM32F103C8",
+            "device": "STM32F407",
 
             // SVD 文件用于查看 STM32F103 外设寄存器。
             // 建议将 STM32F103.svd 放在工程根目录。
-            "svdFile": "${workspaceFolder}/STM32F103.svd",
+            "svdFile": "${workspaceFolder}/STM32F407.svd",
 
             // DAPLink 实现 CMSIS-DAP，这里通过 OpenOCD 连接。
             "servertype": "openocd",
@@ -52,7 +52,7 @@
             // "configFiles": ["openocd_dap.cfg"]
             "configFiles": [
                 "interface/cmsis-dap.cfg",
-                "target/stm32f1x.cfg"
+                "target/stm32f4x.cfg"
             ],
 
             // 启动调试后自动运行到 main() 入口处停止。
@@ -88,13 +88,13 @@
             "cwd": "${workspaceFolder}",
 
             // 要下载并调试的 ELF 文件。
-            "executable": "${workspaceFolder}/build/0_ligntled.elf",
+            "executable": "${workspaceFolder}/build/Test.elf",
 
             "request": "launch",
             "type": "cortex-debug",
 
-            "device": "STM32F103C8",
-            "svdFile": "${workspaceFolder}/STM32F103.svd",
+            "device": "STM32F407",
+            "svdFile": "${workspaceFolder}/STM32F407.svd",
 
             // ST-Link 这里使用 OpenOCD 作为 GDB Server。
             "servertype": "openocd",
@@ -103,7 +103,7 @@
             // target/stm32f1x.cfg：选择 STM32F1 系列目标芯片
             "configFiles": [
                 "interface/stlink.cfg",
-                "target/stm32f1x.cfg"
+                "target/stm32f4x.cfg"
             ],
 
             // 启动调试后自动运行到 main() 入口处停止。
@@ -137,13 +137,13 @@
             "cwd": "${workspaceFolder}",
 
             // 要下载并调试的 ELF 文件。
-            "executable": "${workspaceFolder}/build/0_ligntled.elf",
+            "executable": "${workspaceFolder}/build/Test.elf",
 
             "request": "launch",
             "type": "cortex-debug",
 
             // J-Link GDB Server 需要明确指定目标 MCU。
-            "device": "STM32F103C8",
+            "device": "STM32F407IGHx",
 
             // J-Link 直接使用 SEGGER J-Link GDB Server，
             // 不经过 OpenOCD，因此这里不需要 configFiles。
@@ -153,7 +153,7 @@
             "interface": "swd",
 
             // SVD 文件用于查看 STM32F103 外设寄存器。
-            "svdFile": "${workspaceFolder}/STM32F103.svd",
+            "svdFile": "${workspaceFolder}/STM32F407.svd",
 
             // 启动调试后自动运行到 main() 入口处停止。
             "runToEntryPoint": "main",
